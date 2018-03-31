@@ -1,0 +1,34 @@
+#!/bin/bash
+
+function setpath(){
+	basepath="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+	export PATH="$basepath/xtensa-toolchain/xtensa-lx106-elf/bin:$basepath/xtensa-toolchain/bin:$PATH"
+	unset basepath
+}
+
+function combine(){
+	srec_cat -output ./bin/$1 -binary ./bin/0x00000.bin -binary \
+	-fill 0xff 0x00000 0x10000 ./bin/0x10000.bin -binary -offset 0x10000
+}
+
+case "$1" in
+	"make")#编译
+		setpath
+		cd nodemcu-firmware
+		make $2 $3 $4 $5 $6
+	;;
+	"combine")#合并
+		cd nodemcu-firmware
+		if test -z "$2"
+		then
+			combine "nodemcu_firmware.bin"
+		else
+			combine $2
+		fi
+	;;
+	"help"|*)
+		echo "操作参数:"
+		echo "编译: make <make参数>"
+		echo "合并: combine <输出文件名>"
+		echo "帮助: help"
+esac
